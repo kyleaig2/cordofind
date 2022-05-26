@@ -1,0 +1,8 @@
+# logs
+app.log
+
+# data
+csvs
+
+# cache
+__pycache__
