@@ -28,6 +28,8 @@ def getFollowerCount(token, pid):
 
     if 'followers' in data:
         return data['followers']['total']
+    elif r.status_code == 404:
+        return -1
     else:
         raise Exception('something is wrong with spotify.getFollowerCount(*args)')
 
