@@ -3,15 +3,15 @@ import math
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
-import json
-import re
 import time
 import logging
 import sys
 import os
+import utils
 import spotify
 import apple
 from json.decoder import JSONDecodeError
+from dotenv import load_dotenv
 
 """
     Hello. Welcome to the source code for my program.
@@ -19,6 +19,8 @@ from json.decoder import JSONDecodeError
     TODO: Test campaign on Kyle Corduroy Love Us, record results
     TODO: Using results from test campaign, do another test with Belladonna, record results
 """
+
+load_dotenv()
 
 # Twitter HTTP Session
 sesh = requests.Session()
@@ -29,8 +31,12 @@ authJSON = {}
 expireAt = 0
 
 # Log file setup
-logging.basicConfig(filename="../app.log", format="%(asctime)s [%(levelname)s]: %(message)s", level=logging.INFO)
-csvDir = '../csvs'
+logging.basicConfig(filename="./app.log", format="%(asctime)s [%(levelname)s]: %(message)s", level=logging.INFO)
+csvDir = './csvs'
+
+def check():
+    if not bearer:
+        raise Exception('Missing TWITTER_BEARER_TOKEN')
 
 def init():
     global sesh
@@ -43,6 +49,9 @@ def init():
     except:
         logging.error("Error establishing HTTP Connection with Spotify")
 
+def getAuthJSON():
+    global authJSON
+    return authJSON
 
 def getTwitterIDJSONs(handles):
     jsons = []
@@ -94,31 +103,6 @@ def getTwitterFollowersJSON(tid, pageToken):
         
     return data
 
-def getEmailAddress(user):
-    emailRe = r"[\w.]+@[\w.]+[\w]+"
-    if results := re.findall(emailRe, user["description"]):
-        return results[0]
-    else: return None
-
-def getPlaylistUrl(user):
-    playlistUrl = None
-    if url := getUserUrl(user):
-        if 'playlist' in url:
-            playlistUrl = url
-    return playlistUrl
-
-def getUserUrl(user):
-    url = ''
-    if user['url']:
-        if 'expanded_url' in user['entities']['url']['urls'][0]:
-            url = user['entities']['url']['urls'][0]['expanded_url']
-    return url
-
-def getSpFollowTotal(pid):
-    if (time.time() >= expireAt) or 'access_token' not in authJSON: # Has token expired?
-        reauthenticate()
-    return spotify.getFollowerCount(authJSON["access_token"], pid)
-
 def reauthenticate():
     global authJSON, expireAt
     authJSON = spotify.authenticate()
@@ -136,6 +120,7 @@ def writeToCSV(row, name):
         tweeter.writerow(row)
 
 def main():
+    check()
     init()
 
     # Loop through console arguments (target twitter accounts)
@@ -145,8 +130,7 @@ def main():
         idJSONs = getTwitterIDJSONs(args)
     except Exception as e:
         logging.error("Error establishing HTTP Connection with Twitter")
-        logging.error(e)
-        quit()
+        raise e
     
     for idJSON in idJSONs:
         target = idJSON['username'].lower()
@@ -154,7 +138,7 @@ def main():
         logging.info("starting: " + target)
         numAcctsSearched = 0
         initCSV(target)
-        pageToken = '&pagination_token=CM9GLAHL5K81CZZZ'
+        pageToken =  ""
         # Pagination Loop
         while True:
             # Retrieve User JSON List
@@ -166,30 +150,13 @@ def main():
             
             # Data search`
             for user in userList:
-                realName = user["name"]
-                handle = user["username"]
-                userUrl = getUserUrl(user)
-                playlistUrl = getPlaylistUrl(user)
-                spFollowTotal = 0
-                email = getEmailAddress(user)
-                comments = ""
-                match = False
-
-                if playlistUrl:
-                    match = True
-                    if pid := spotify.getPlaylistID(playlistUrl):
-                        spFollowTotal = getSpFollowTotal(pid)
-                    logging.info(realName + "(" + handle + "): " + playlistUrl)
-                    
-                # Accepting submissions? (Or could be explicitly rejecting! lol)
-                submitRe = re.compile(r"submi(?:t|ssion*)")
-                if submitRe.search(user["description"] + userUrl):
-                    comments += "Submission "
-                    match = True
+                # Has token expired?
+                if (time.time() >= expireAt) or 'access_token' not in authJSON:
+                    reauthenticate()
 
                 # Write to CSV
-                if match:
-                    writeToCSV([realName, handle, playlistUrl, spFollowTotal, email, comments, target], target)
+                if match := utils.createMatch(user, authJSON):
+                    writeToCSV([*match, target], target)
 
                 # Increment accounts searched count
                 numAcctsSearched+=1
@@ -207,7 +174,6 @@ def main():
     # end for
 
 if __name__ == '__main__':
-    #main()
     try:
         main()
     except Exception as e:

@@ -1,0 +1,39 @@
+name: cordofind
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - autopep8=1.6.0=pyhd3eb1b0_1
+  - brotlipy=0.7.0=py310hca72f7f_1002
+  - bzip2=1.0.8=h1de35cc_0
+  - ca-certificates=2022.07.19=hecd8cb5_0
+  - certifi=2022.9.14=py310hecd8cb5_0
+  - cffi=1.15.1=py310hc55c11b_0
+  - charset-normalizer=2.0.4=pyhd3eb1b0_0
+  - click=8.1.3=py310h2ec42d9_0
+  - cryptography=37.0.1=py310hf6deb26_0
+  - idna=3.3=pyhd3eb1b0_0
+  - libcxx=14.0.6=h9765a3e_0
+  - libffi=3.3=hb1e8313_2
+  - ncurses=6.3=hca72f7f_3
+  - openssl=1.1.1q=hca72f7f_0
+  - pip=22.2.2=py310hecd8cb5_0
+  - pycodestyle=2.8.0=pyhd3eb1b0_0
+  - pycparser=2.21=pyhd3eb1b0_0
+  - pyopenssl=22.0.0=pyhd3eb1b0_0
+  - pysocks=1.7.1=py310hecd8cb5_0
+  - python=3.10.4=hdfd78df_0
+  - python-dotenv=0.21.0=pyhd8ed1ab_0
+  - python_abi=3.10=2_cp310
+  - readline=8.1.2=hca72f7f_1
+  - requests=2.28.1=py310hecd8cb5_0
+  - setuptools=63.4.1=py310hecd8cb5_0
+  - sqlite=3.39.3=h707629a_0
+  - tk=8.6.12=h5d9f67b_0
+  - toml=0.10.2=pyhd3eb1b0_0
+  - tzdata=2022c=h04d1e81_0
+  - urllib3=1.26.11=py310hecd8cb5_0
+  - wheel=0.37.1=pyhd3eb1b0_0
+  - xz=5.2.6=hca72f7f_0
+  - zlib=1.2.12=h4dc903c_3
+prefix: /Users/kyleaig/opt/miniconda3/envs/cordofind
