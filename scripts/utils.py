@@ -1,5 +1,5 @@
 import logging
-import spotify
+from scripts import spotify
 import re
 
 def getUserUrl(user):
@@ -22,7 +22,7 @@ def getEmailAddress(user):
         return results[0]
     else: return None
 
-def createMatch(user, authJSON):
+def createMatch(user, token):
     match = False
 
     realName = user["name"]
@@ -37,8 +37,8 @@ def createMatch(user, authJSON):
     # 1. Has Spotify playlist info
     if playlistUrl:
         match = True
-        if pid := spotify.getPlaylistID(playlistUrl):
-            spFollowTotal = spotify.getFollowerCount(authJSON["access_token"], pid)
+        if playlist := spotify.getPlaylist(token, playlistUrl):
+            spFollowTotal = spotify.getFollowerCount(playlist)
         logging.info(realName + "(" + handle + "): " + playlistUrl)
         
     # 2. Accepting submissions? (Or could be explicitly rejecting! lol)

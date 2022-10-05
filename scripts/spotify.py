@@ -10,12 +10,15 @@ client_id = os.environ.get('SPOTIFY_CLIENT_ID')
 client_secret = os.environ.get('SPOTIFY_CLIENT_SECRET')
 
 def getPlaylistID(url):
-    playlistRe = r"spotify.com/playlist/([A-Za-z0-9]+)?"
+    playlistRe = r"spotify\.com/[\/\w]*playlist/([A-Za-z0-9]+)?"
     if results := re.findall(playlistRe, url):
         return results[0]
     else: return None
 
-def getFollowerCount(token, pid):
+def getPlaylist(token, url):
+    if not (pid := getPlaylistID(url)):
+        return None
+
     url = 'https://api.spotify.com/v1/playlists/' + pid
 
     headers = {
@@ -26,12 +29,20 @@ def getFollowerCount(token, pid):
 
     data = r.json()
 
-    if 'followers' in data:
-        return data['followers']['total']
-    elif r.status_code == 404:
-        return -1
+    if r.status_code != 200:
+        return None
+
+    # no official spotify playlists
+    if data['owner']['id'] == 'spotify':
+        return None
     else:
-        raise Exception('something is wrong with spotify.getFollowerCount(*args)')
+        return data
+
+def getFollowerCount(playlist):
+    if 'followers' in playlist:
+        return playlist['followers']['total']
+    else:
+        return -1
 
 def authenticate():
     url = 'https://accounts.spotify.com/api/token'

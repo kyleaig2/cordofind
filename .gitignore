@@ -3,6 +3,7 @@ app.log
 
 # data
 csvs
+config.py
 
 # cache
 __pycache__

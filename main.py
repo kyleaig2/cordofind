@@ -7,9 +7,9 @@ import time
 import logging
 import sys
 import os
-import utils
-import spotify
-import apple
+from scripts import apple
+from scripts import spotify
+from scripts import utils
 from json.decoder import JSONDecodeError
 from dotenv import load_dotenv
 
@@ -155,7 +155,7 @@ def main():
                     reauthenticate()
 
                 # Write to CSV
-                if match := utils.createMatch(user, authJSON):
+                if match := utils.createMatch(user, authJSON['access_token']):
                     writeToCSV([*match, target], target)
 
                 # Increment accounts searched count
