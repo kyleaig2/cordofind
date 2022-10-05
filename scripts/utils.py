@@ -32,7 +32,7 @@ def createMatch(user, token):
     spFollowTotal = 0
     email = getEmailAddress(user)
 
-    comments = ""
+    comments = []
     
     # 1. Has Spotify playlist info
     if playlistUrl:
@@ -44,7 +44,7 @@ def createMatch(user, token):
     # 2. Accepting submissions? (Or could be explicitly rejecting! lol)
     submitRe = re.compile(r"submi(?:t|ssion*)")
     if submitRe.search(user["description"] + userUrl):
-        comments += "Submission "
+        comments += ["Submission"]
         match = True
 
     # 3. Linktree...? see TEEJUS
@@ -52,4 +52,4 @@ def createMatch(user, token):
     # 4. etc...
 
     if match:
-        return [realName, handle, playlistUrl, spFollowTotal, email, comments]
+        return [realName, handle, playlistUrl, spFollowTotal, email, ','.join(comments)]

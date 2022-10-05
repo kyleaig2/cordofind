@@ -1,5 +1,5 @@
-import csv
 import math
+import pandas as pd
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
@@ -12,6 +12,9 @@ from scripts import spotify
 from scripts import utils
 from json.decoder import JSONDecodeError
 from dotenv import load_dotenv
+from config import COLUMNS
+from config import OUT_CSV
+from scripts.df import consolidate
 
 """
     Hello. Welcome to the source code for my program.
@@ -32,13 +35,27 @@ expireAt = 0
 
 # Log file setup
 logging.basicConfig(filename="./app.log", format="%(asctime)s [%(levelname)s]: %(message)s", level=logging.INFO)
-csvDir = './csvs'
+
+# Main DF
+main_df = None
+
+queue = pd.DataFrame()
 
 def check():
     if not bearer:
         raise Exception('Missing TWITTER_BEARER_TOKEN')
 
+def load():
+    global main_df
+    try:
+        main_df = pd.read_csv(OUT_CSV, index_col='Handle')
+    except Exception as e:
+        logging.warning(e)
+        main_df = pd.DataFrame()
+
 def init():
+    load()
+
     global sesh
     adapter = HTTPAdapter(max_retries=Retry(total=10, backoff_factor=60))
     sesh.headers.update({'Authorization' : 'Bearer ' + bearer})
@@ -75,6 +92,7 @@ def getTwitterFollowersJSON(tid, pageToken):
     r = sesh.get('https://api.twitter.com/2/users/'+str(tid)+'/followers?'+parameters)
 
     if r.status_code == 429 or 'data' not in r.json():
+        commit()
         try:
             sleep = int(r.headers['x-rate-limit-reset']) - time.time()
         except:
@@ -108,16 +126,21 @@ def reauthenticate():
     authJSON = spotify.authenticate()
     expireAt = time.time() + authJSON["expires_in"]
 
-def initCSV(name):
-    os.makedirs(csvDir+'/'+name, exist_ok=True)
-    with open(csvDir+'/'+name+'/'+name+'_followers.csv', mode='w') as twitterFile:
-        tweeter = csv.writer(twitterFile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-        tweeter.writerow(["Name", "Handle", "Playlist URL", "Playlist Followers", "Email", "Comments", "Connection"])
+def addToQueue(df: pd.DataFrame):
+    global queue
+    queue = pd.concat([queue, df])
 
-def writeToCSV(row, name):
-    with open(csvDir+'/'+name+'/'+name+'_followers.csv', mode='a') as twitterFile:
-        tweeter = csv.writer(twitterFile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-        tweeter.writerow(row)
+def commit():
+    global queue
+    global main_df
+    global OUT_CSV
+
+    if (not queue.empty):
+        queue.set_index('Handle', inplace=True)
+        main_df = consolidate(main_df, queue)
+        queue = queue.iloc[0:0]
+
+    main_df.to_csv(OUT_CSV)
 
 def main():
     check()
@@ -137,7 +160,6 @@ def main():
         tid = idJSON['id']
         logging.info("starting: " + target)
         numAcctsSearched = 0
-        initCSV(target)
         pageToken =  ""
         # Pagination Loop
         while True:
@@ -156,7 +178,8 @@ def main():
 
                 # Write to CSV
                 if match := utils.createMatch(user, authJSON['access_token']):
-                    writeToCSV([*match, target], target)
+                    df = pd.DataFrame([[*match, target]], columns=COLUMNS)
+                    addToQueue(df)
 
                 # Increment accounts searched count
                 numAcctsSearched+=1
@@ -169,6 +192,7 @@ def main():
             else:
                 break
         # end while
+        commit()
         logging.info(target + " finished. " + str(numAcctsSearched) + " accounts searched")
         apple.notify('CordoFind', 'Finished ' + target)
     # end for
