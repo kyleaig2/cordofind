@@ -7,8 +7,13 @@
 2. `conda activate cordokhan`
 3. `python3 main.py [artist names]`
 
-* I think? Shouldn't be my directory path at least
+* I think? Shouldn't be my laptop directory path at least
 
-# How to export
+# For longer running processes
+1. Start process
+2. Run the command `ps | grep python *`
+3. Copy the pid of the process running cordofind
+4. Run `caffeinate -i -s -w [pid]`, so your Mac does not sleep until the process finishes
+
+# How to export environment
 `conda env export > environment.yml`
-
