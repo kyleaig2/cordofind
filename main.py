@@ -12,8 +12,8 @@ from scripts import spotify
 from scripts import utils
 from json.decoder import JSONDecodeError
 from dotenv import load_dotenv
-from config import COLUMNS
-from config import OUT_CSV
+from scripts.config import COLUMNS
+from scripts.config import OUT_CSV
 from scripts.df import consolidate
 
 """

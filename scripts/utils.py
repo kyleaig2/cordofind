@@ -1,4 +1,5 @@
 import logging
+from scripts.config import BEATS_RE, NO_BEATS_RE, NO_SUBMIT_RE, SUBMIT_RE
 from scripts import spotify
 import re
 
@@ -41,15 +42,20 @@ def createMatch(user, token):
             spFollowTotal = spotify.getFollowerCount(playlist)
         logging.info(realName + "(" + handle + "): " + playlistUrl)
         
-    # 2. Accepting submissions? (Or could be explicitly rejecting! lol)
-    submitRe = re.compile(r"submi(?:t|ssion*)")
-    if submitRe.search(user["description"] + userUrl):
+    # 2. Accepting submissions?
+    if SUBMIT_RE.search(user["description"] + userUrl) and not NO_SUBMIT_RE.search(user["description"]):
         comments += ["Submission"]
         match = True
 
-    # 3. Linktree...? see TEEJUS
+    # 3. Accepting beats
+    if BEATS_RE.search(user["description"] + userUrl) and not NO_BEATS_RE.search(user["description"]):
+        comments += ["Beat Submission"]
+        match = True
+        logging.info("Beat Submission: " + realName + "(" + handle + ")")
 
-    # 4. etc...
+    # 4. Linktree...? see TEEJUS
+
+    # 5. etc...
 
     if match:
         return [realName, handle, playlistUrl, spFollowTotal, email, ','.join(comments)]

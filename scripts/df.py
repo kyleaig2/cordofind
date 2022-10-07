@@ -4,10 +4,9 @@ import pandas as pd
 def _func(x, y): 
     if y in x.split(','):
         return x
-    elif (x and y):
+    if (x and y):
         return x + ',' + y
-    else: 
-        return x or y
+    return x or y
 
 def consolidate(a: pd.DataFrame, b: pd.DataFrame):
     if a.empty: return b
@@ -18,7 +17,7 @@ def consolidate(a: pd.DataFrame, b: pd.DataFrame):
     y = df['Connection_y']
     
     df['Connection'] = x.combine(y, func=_func, fill_value='')
-    df =  df.drop(['Connection_x', 'Connection_y'], axis=1)
+    df = df.drop(['Connection_x', 'Connection_y'], axis=1)
 
     return df
 
