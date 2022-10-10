@@ -1,5 +1,7 @@
 import re
 
+# api endpoints
+TW_USERS_ENDPOINT = 'https://api.twitter.com/2/users'
 
 COLUMNS = ['Name', 'Handle', 'Playlist URL',
            'Playlist Followers', 'Email', 'Comments', 'Connection']

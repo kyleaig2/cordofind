@@ -12,7 +12,7 @@ from scripts import spotify
 from scripts import utils
 from json.decoder import JSONDecodeError
 from dotenv import load_dotenv
-from scripts.config import COLUMNS
+from scripts.config import COLUMNS, TW_USERS_ENDPOINT
 from scripts.config import OUT_CSV
 from scripts.df import consolidate
 
@@ -59,7 +59,7 @@ def init():
     global sesh
     adapter = HTTPAdapter(max_retries=Retry(total=10, backoff_factor=60))
     sesh.headers.update({'Authorization' : 'Bearer ' + bearer})
-    sesh.mount('https://api.twitter.com/2/users', adapter)
+    sesh.mount(TW_USERS_ENDPOINT, adapter)
     
     try:
         reauthenticate()
@@ -72,7 +72,7 @@ def getAuthJSON():
 
 def getTwitterIDJSONs(handles):
     jsons = []
-    r = sesh.get('https://api.twitter.com/2/users/by?usernames='+','.join(handles))
+    r = sesh.get(TW_USERS_ENDPOINT + '/by?usernames='+','.join(handles))
     if 'data' in r.json():
         userList = r.json()['data']
         for user in userList:
@@ -89,10 +89,16 @@ def getTwitterFollowersJSON(tid, pageToken):
     global sesh
     data = {}
     parameters = 'user.fields=description,url,entities&max_results=1000'+pageToken
-    r = sesh.get('https://api.twitter.com/2/users/'+str(tid)+'/followers?'+parameters)
+    r = sesh.get(TW_USERS_ENDPOINT+'/'+str(tid)+'/followers?'+parameters)
 
-    if r.status_code == 429 or 'data' not in r.json():
+    attempt = 0
+    while r.status_code == 429 or 'data' not in r.json():
         commit()
+        attempt += 1
+
+        if attempt == 4:
+            raise Exception("Couldn't get the next page of followers")
+
         try:
             sleep = int(r.headers['x-rate-limit-reset']) - time.time()
         except:
@@ -100,9 +106,9 @@ def getTwitterFollowersJSON(tid, pageToken):
         logging.info("sleeping for " + str(math.ceil(sleep/60)) + " min")
         time.sleep(sleep)
         logging.info("resuming")
-        r = sesh.get('https://api.twitter.com/2/users/'+str(tid)+'/followers?'+parameters)
+        r = sesh.get(TW_USERS_ENDPOINT+'/'+str(tid)+'/followers?'+parameters)
 
-    elif r.status_code == 400:
+    if r.status_code == 400:
         logging.error('code 400')
         logging.error(r.headers)
         logging.error(str(r.status_code) + ': ' + r.text)
