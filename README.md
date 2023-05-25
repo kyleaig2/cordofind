@@ -7,7 +7,7 @@
 2. `conda activate cordokhan`
 3. `python3 main.py [artist names]`
 
-* I think? Shouldn't be my laptop directory path at least
+\* I think? Shouldn't be my laptop directory path at least
 
 # For longer running processes
 1. Start process using the above command
@@ -17,3 +17,6 @@
 
 # How to export environment
 `conda env export > environment.yml`
+
+# How to use data [In Progress]
+Upload to AirTable
