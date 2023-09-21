@@ -4,7 +4,7 @@
 
 0. *Change or delete environment prefix in `environment.yml`
 1. `conda env create -f environment.yml`
-2. `conda activate cordokhan`
+2. `conda activate cordofind`
 3. `python3 main.py [artist names]`
 
 * I think? Shouldn't be my laptop directory path at least
